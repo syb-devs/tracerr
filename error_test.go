@@ -16,11 +16,11 @@ func fails() error {
 }
 
 func failsToo() error {
-	return tracerr.WrapError(fails(), "Oh my God! This is going to explode!!")
+	return tracerr.Wrap(fails(), "Oh my God! This is going to explode!!")
 }
 
 func failsAgain() error {
-	return tracerr.WrapError(failsToo(), "something went really wrong")
+	return tracerr.Wrap(failsToo(), "something went really wrong")
 }
 
 func middleFunc() error {
@@ -28,10 +28,10 @@ func middleFunc() error {
 }
 
 func first() error {
-	return tracerr.WrapError(middleFunc(), "first failed")
+	return tracerr.Wrap(middleFunc(), "first failed")
 }
 
-func TestWrapError(t *testing.T) {
+func TestWrap(t *testing.T) {
 	patterns := []string{
 		"wrapper error: first failed",
 		"wrapper error: something went really wrong",
@@ -45,7 +45,7 @@ func TestWrapError(t *testing.T) {
 	}
 
 	err := first()
-	trace := err.(*tracerr.WrappedError).TraceString()
+	trace := err.(*tracerr.Error).TraceString()
 	for _, pattern := range patterns {
 		i := strings.Index(trace, pattern)
 		if i == -1 {

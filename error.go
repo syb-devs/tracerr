@@ -46,20 +46,20 @@ func (st stackTrace) String() string {
 	return str
 }
 
-// WrappedError is used to combine multiple errors into one containing stack trace information
-type WrappedError struct {
+// Error is used to combine multiple errors into one containing stack trace information
+type Error struct {
 	msg   string
 	err   error
 	trace stackTrace
 }
 
-func (we *WrappedError) Error() string {
+func (we *Error) Error() string {
 	return we.msg
 }
 
 // TraceString returns a string representing the stack trace of the error
-func (we *WrappedError) TraceString() string {
-	if we2, ok := we.err.(*WrappedError); ok {
+func (we *Error) TraceString() string {
+	if we2, ok := we.err.(*Error); ok {
 		return fmt.Sprintf(
 			"wrapper error: %s\n%s\n%s\n",
 			we.msg,
@@ -70,14 +70,14 @@ func (we *WrappedError) TraceString() string {
 	return fmt.Sprintf("wrapper error: %s\n%s\ntrigger error: %s\n", we.msg, we.trace.String(), we.err.Error())
 }
 
-// WrapError returns a new error that wraps the given one adding stack trace info to it
-func WrapError(err error, message string) *WrappedError {
-	we := &WrappedError{
+// Wrap returns a new error that wraps the given one adding stack trace info to it
+func Wrap(err error, message string) *Error {
+	we := &Error{
 		err: err,
 		msg: message,
 	}
 	var limit int
-	if _, ok := err.(*WrappedError); ok {
+	if _, ok := err.(*Error); ok {
 		limit = 1
 	} else {
 		limit = 0
