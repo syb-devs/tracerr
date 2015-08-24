@@ -55,3 +55,15 @@ func TestWrap(t *testing.T) {
 		}
 	}
 }
+
+func TestError(t *testing.T) {
+	err := tracerr.Wrap(tracerr.Wrap(errors.New("inner"), "middle"), "outer")
+
+	actual := err.Error()
+	expected := "outer: middle: inner"
+
+	if actual != expected {
+		t.Errorf("want: %s", expected)
+		t.Errorf("have: %s", actual)
+	}
+}
