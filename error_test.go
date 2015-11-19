@@ -8,9 +8,11 @@ import (
 	"github.com/syb-devs/tracerr"
 )
 
+var origErr = errors.New("Whoops!")
+
 func fails() error {
 	f := func() error {
-		return errors.New("Whoops!")
+		return origErr
 	}
 	return f()
 }
@@ -31,21 +33,30 @@ func first() error {
 	return tracerr.Wrap(middleFunc(), "first failed")
 }
 
-func TestWrap(t *testing.T) {
+func TestTraceString(t *testing.T) {
 	patterns := []string{
-		"wrapper error: first failed",
-		"wrapper error: something went really wrong",
-		"wrapper error: Oh my God! This is going to explode!!",
-		"/error_test.go:19",
-		"/error_test.go:23",
-		"/error_test.go:27",
-		"/error_test.go:31",
-		"/error_test.go:47",
-		"trigger error: Whoops!",
+		"error:\nWhoops!",
+		"first failed",
+		"something went really wrong",
+		"Oh my God! This is going to explode!!",
+		"tracerr/error_test.go:21",
+		"tracerr/error_test.go:25",
+		"tracerr/error_test.go:29",
+		"tracerr/error_test.go:33",
+		"tracerr/error_test.go:49",
 	}
 
 	err := first()
-	trace := err.(*tracerr.Error).TraceString()
+	werr := err.(*tracerr.Error)
+
+	uerr := werr.Unwrap()
+	if uerr != origErr {
+		t.Error("unwrapping error")
+		t.Errorf("want:\n %v", origErr)
+		t.Errorf("have:\n %v", uerr)
+	}
+
+	trace := werr.TraceString()
 	for _, pattern := range patterns {
 		i := strings.Index(trace, pattern)
 		if i == -1 {
@@ -53,17 +64,5 @@ func TestWrap(t *testing.T) {
 			t.Errorf("want:\n %s", pattern)
 			t.Errorf("stack trace string:\n %s", trace)
 		}
-	}
-}
-
-func TestError(t *testing.T) {
-	err := tracerr.Wrap(tracerr.Wrap(errors.New("inner"), "middle"), "outer")
-
-	actual := err.Error()
-	expected := "outer: middle: inner"
-
-	if actual != expected {
-		t.Errorf("want: %s", expected)
-		t.Errorf("have: %s", actual)
 	}
 }
